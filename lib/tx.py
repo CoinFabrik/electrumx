@@ -40,7 +40,7 @@ class Tx(namedtuple("Tx", "version inputs outputs locktime")):
 
     @cachedproperty
     def is_coinbase(self):
-        return self.inputs[0].is_coinbase
+        return len(self.inputs) >= 1 and self.inputs[0].is_coinbase
 
     # FIXME: add hash as a cached property?
 
