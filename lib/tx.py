@@ -35,7 +35,7 @@ from lib.util import cachedproperty
 from lib.hash import double_sha256, hash_to_str
 
 
-class Tx(namedtuple("Tx", "version inputs outputs locktime")):
+class Tx(namedtuple("Tx", "version inputs outputs witness locktime")):
     '''Class representing a transaction.'''
 
     @cachedproperty
@@ -87,10 +87,24 @@ class Deserializer(object):
         we process it in the natural serialized order.
         '''
         start = self.cursor
+        version = self._read_le_int32()
+        assert self.cursor + 2 <= len(self.binary)
+        if self.binary[self.cursor] == 0 and self.binary[self.cursor + 1] == 1:
+            # This is a SegWit transaction.
+            self.cursor += 2
+            return Tx(
+                version,  # version
+                self._read_inputs(),    # inputs
+                self._read_outputs(),   # outputs
+                self._read_witnesses(), # witness data
+                self._read_le_uint32()  # locktime
+            ), double_sha256(self.binary[start:self.cursor])
+        
         return Tx(
-            self._read_le_int32(),  # version
+            version,  # version
             self._read_inputs(),    # inputs
             self._read_outputs(),   # outputs
+            None,
             self._read_le_uint32()  # locktime
         ), double_sha256(self.binary[start:self.cursor])
 
@@ -122,6 +136,13 @@ class Deserializer(object):
             self._read_le_int64(),  # value
             self._read_varbytes(),  # pk_script
         )
+
+    def _read_witnesses(self):
+        read_witness = self._read_witness
+        return [read_witness() for i in range(self._read_varint())]
+    
+    def _read_witness(self):
+        return self._read_varbytes()
 
     def _read_byte(self):
         cursor = self.cursor
