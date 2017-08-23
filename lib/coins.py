@@ -393,6 +393,25 @@ class BitcoinTestnet(Bitcoin):
     ]
 
 
+class BitcoinTestnet5(Bitcoin):
+    SHORTNAME = "XTN5"
+    NET = "testnet5"
+    XPUB_VERBYTES = bytes.fromhex("043587cf")
+    XPRV_VERBYTES = bytes.fromhex("04358394")
+    P2PKH_VERBYTE = bytes.fromhex("6f")
+    P2SH_VERBYTES = [bytes.fromhex("c4")]
+    WIF_BYTE = bytes.fromhex("ef")
+    GENESIS_HASH = ('000000000933ea01ad0ee984209779ba'
+                    'aec3ced90fa3f408719526f8d77f4943')
+    REORG_LIMIT = 8000
+    TX_COUNT = 1930163
+    TX_COUNT_HEIGHT = 71554
+    TX_PER_BLOCK = 26
+    RPC_PORT = 19001
+    PEER_DEFAULT_PORTS = {'t': '51001', 's': '51002'}
+    PEERS = []
+
+
 class BitcoinRegtest(BitcoinTestnet):
     NET = "regtest"
     GENESIS_HASH = ('0f9188f13cb7b2c71f2a335e3a4fc328'
