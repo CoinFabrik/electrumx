@@ -102,7 +102,7 @@ class Deserializer(object):
             inputs = self._read_inputs()
             outputs = self._read_outputs()
             tx_buffer += self.binary[inputs_pos : self.cursor]
-            witnesses = self._read_witnesses()
+            witnesses = self._read_witnesses(inputs)
             locktime_pos = self.cursor
             locktime = self._read_le_uint32()
             tx_buffer += self.binary[locktime_pos : self.cursor]
@@ -149,9 +149,9 @@ class Deserializer(object):
             self._read_varbytes(),  # pk_script
         )
 
-    def _read_witnesses(self):
+    def _read_witnesses(self, inputs):
         read_witness = self._read_witness
-        return [read_witness() for i in range(self._read_varint())]
+        return [[read_witness() for i in range(self._read_varint())] for j in range(len(inputs))]
     
     def _read_witness(self):
         return self._read_varbytes()
