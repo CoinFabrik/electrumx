@@ -88,25 +88,37 @@ class Deserializer(object):
         '''
         start = self.cursor
         version = self._read_le_int32()
+        inputs = None
+        outputs = None
+        witnesses = None
+        locktime = None
+        tx_buffer = None
         assert self.cursor + 2 <= len(self.binary)
         if self.binary[self.cursor] == 0 and self.binary[self.cursor + 1] == 1:
             # This is a SegWit transaction.
+            tx_buffer = self.binary[start : self.cursor]
             self.cursor += 2
-            return Tx(
-                version,  # version
-                self._read_inputs(),    # inputs
-                self._read_outputs(),   # outputs
-                self._read_witnesses(), # witness data
-                self._read_le_uint32()  # locktime
-            ), double_sha256(self.binary[start:self.cursor])
-        
+            inputs_pos = self.cursor
+            inputs = self._read_inputs()
+            outputs = self._read_outputs()
+            tx_buffer += self.binary[inputs_pos : self.cursor]
+            witnesses = self._read_witnesses()
+            locktime_pos = self.cursor
+            locktime = self._read_le_uint32()
+            tx_buffer += self.binary[locktime_pos : self.cursor]
+        else:
+            inputs = self._read_inputs()
+            outputs = self._read_outputs()
+            locktime = self._read_le_uint32()
+            tx_buffer = self.binary[start : self.cursor]
+
         return Tx(
-            version,  # version
-            self._read_inputs(),    # inputs
-            self._read_outputs(),   # outputs
-            None,
-            self._read_le_uint32()  # locktime
-        ), double_sha256(self.binary[start:self.cursor])
+            version,   # version
+            inputs,    # inputs
+            outputs,   # outputs
+            witnesses, # witness data
+            locktime   # locktime
+        ), double_sha256(tx_buffer)
 
     def read_tx_block(self):
         '''Returns a list of (deserialized_tx, tx_hash) pairs.'''
